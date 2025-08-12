@@ -1,4 +1,4 @@
-pip install streamlit pandas plotly faiss-cpu sentence-transformers numpy scikit-learn gTTS googletrans==4.0.0-rc1 SpeechRecognition
+
 import streamlit as st
 import pandas as pd
 import plotly.express as px
