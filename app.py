@@ -6,15 +6,21 @@ import numpy as np
 from sentence_transformers import SentenceTransformer
 from gtts import gTTS
 from googletrans import Translator
-import speech_recognition as sr
-import tempfile
-import os
+
+# ------------------ Optional Voice Input ------------------
+try:
+    import speech_recognition as sr
+    voice_available = True
+except:
+    voice_available = False
 
 # ------------------ Load Data ------------------
 @st.cache_data
 def load_data():
     nco_df = pd.read_csv("nco_cleaned.csv")
     govt_df = pd.read_csv("govt_schemes.csv")
+    nco_df['nco_code'] = nco_df['nco_code'].astype(str)
+    govt_df['eligible_nco_code'] = govt_df['eligible_nco_code'].astype(str)
     return nco_df, govt_df
 
 nco_df, govt_df = load_data()
@@ -49,6 +55,9 @@ def translate_text(text, target_lang):
 
 # ------------------ Voice Input ------------------
 def voice_to_text():
+    if not voice_available:
+        st.error("Voice input is not available in this deployment.")
+        return ""
     recognizer = sr.Recognizer()
     with sr.Microphone() as source:
         st.info("🎤 Speak now...")
@@ -68,10 +77,10 @@ with tab1:
     
     col1, col2 = st.columns([3,1])
     with col1:
-        search_option = st.radio("Search type:", ["Text", "Voice"])
+        search_option = st.radio("Search type:", ["Text", "Voice" if voice_available else "Text only"])
         if search_option == "Text":
             query = st.text_input("Enter job title or skill:")
-        else:
+        elif voice_available and search_option == "Voice":
             if st.button("🎤 Record Voice"):
                 query = voice_to_text()
             else:
@@ -114,7 +123,6 @@ with tab3:
     
     if st.button("Get Reply"):
         if user_input:
-            # Here you can integrate OpenAI/GPT API if needed
             reply = f"This is a placeholder reply for: {user_input}"
             translated = translate_text(reply, lang)
             st.write(translated)
